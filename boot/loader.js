@@ -1,5 +1,6 @@
 (function() {
   var elem = window.elem = {};
+  var globalEval = eval;
 
   /**
    * Root directory of all elements 
@@ -475,16 +476,23 @@
   };
 
   function jsfn(txt, global) {
-    var fn;
+    var fntxt;
+    var sourcemappingurl = txt.split('\n').filter(function(line) {
+      return line.indexOf('//# sourceMappingURL=') !== -1;
+    });
 
     if(global) {
-      fn = new Function(txt);
+      fntxt = '(function() {\n' + txt + '\n})\n';
     }
     else {
-      fn = new Function('module','exports','require', txt);
+      fntxt = '(function(module, exports, require) {\n' + txt + '\n})\n';
     }
 
-    return fn;
+    if (sourcemappingurl.length > 0) {
+      fntxt += sourcemappingurl[0];
+    }
+
+    return globalEval(fntxt);
   }
 
   function normalize(path) {
